@@ -42,11 +42,20 @@ pub struct ToolCallRecord {
 #[derive(Debug)]
 pub enum TranscriptEntry {
     UserInput(String),
-    Text { content: String, phase: AssistantPhase },
-    Thinking { content: String, collapsed: bool },
+    Text {
+        content: String,
+        phase: AssistantPhase,
+    },
+    Thinking {
+        content: String,
+        collapsed: bool,
+    },
     ToolCall(ToolCallRecord),
     Line(String),
-    Approval { capability: String, scope: ApprovalScope },
+    Approval {
+        capability: String,
+        scope: ApprovalScope,
+    },
     TurnBoundary(TurnStatus),
 }
 
@@ -109,13 +118,16 @@ impl TranscriptView {
     /// Opens a new block at schema index `index`.
     pub fn start_block(&mut self, index: u32, block: StreamBlock) {
         let entry = match block {
-            StreamBlock::FinalText { content } => {
-                TranscriptEntry::Text { content, phase: self.current_phase }
-            }
+            StreamBlock::FinalText { content } => TranscriptEntry::Text {
+                content,
+                phase: self.current_phase,
+            },
             StreamBlock::Thinking { content, collapsed } => {
                 TranscriptEntry::Thinking { content, collapsed }
             }
-            StreamBlock::ToolCall { id, name, status, .. } => {
+            StreamBlock::ToolCall {
+                id, name, status, ..
+            } => {
                 let entry_idx = self.entries.len();
                 self.tool_call_index.insert(id.clone(), entry_idx);
                 TranscriptEntry::ToolCall(ToolCallRecord {
@@ -126,11 +138,13 @@ impl TranscriptView {
                     is_error: false,
                 })
             }
-            StreamBlock::ToolResult { tool_call_id, output, is_error } => {
+            StreamBlock::ToolResult {
+                tool_call_id,
+                output,
+                is_error,
+            } => {
                 if let Some(&tc_idx) = self.tool_call_index.get(&tool_call_id) {
-                    if let Some(TranscriptEntry::ToolCall(rec)) =
-                        self.entries.get_mut(tc_idx)
-                    {
+                    if let Some(TranscriptEntry::ToolCall(rec)) = self.entries.get_mut(tc_idx) {
                         rec.output = Some(output);
                         rec.is_error = is_error;
                     }
@@ -168,7 +182,8 @@ impl TranscriptView {
 
     pub fn start_tool_call(&mut self, tool_call_id: &str, tool_name: &str) {
         let entry_idx = self.entries.len();
-        self.tool_call_index.insert(tool_call_id.to_string(), entry_idx);
+        self.tool_call_index
+            .insert(tool_call_id.to_string(), entry_idx);
         self.entries.push(TranscriptEntry::ToolCall(ToolCallRecord {
             id: tool_call_id.to_string(),
             name: tool_name.to_string(),
@@ -186,7 +201,11 @@ impl TranscriptView {
             return;
         };
         if let Some(TranscriptEntry::ToolCall(rec)) = self.entries.get_mut(idx) {
-            rec.status = if is_error { ToolStatus::Error } else { ToolStatus::Complete };
+            rec.status = if is_error {
+                ToolStatus::Error
+            } else {
+                ToolStatus::Complete
+            };
             rec.output = Some(output.to_string());
             rec.is_error = is_error;
         }
@@ -267,7 +286,12 @@ impl TranscriptView {
         match entry {
             TranscriptEntry::UserInput(s) => {
                 text.push_line(Line::from(vec![
-                    Span::styled(">>> ", Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)),
+                    Span::styled(
+                        ">>> ",
+                        Style::default()
+                            .fg(Color::Cyan)
+                            .add_modifier(Modifier::BOLD),
+                    ),
                     Span::styled(s.as_str(), Style::default().fg(Color::White)),
                 ]));
             }
@@ -287,12 +311,16 @@ impl TranscriptView {
                 if *collapsed {
                     text.push_line(Line::from(Span::styled(
                         "    <thinking collapsed>",
-                        Style::default().fg(Color::DarkGray).add_modifier(Modifier::ITALIC),
+                        Style::default()
+                            .fg(Color::DarkGray)
+                            .add_modifier(Modifier::ITALIC),
                     )));
                 } else {
                     text.push_line(Line::from(Span::styled(
                         "    <thinking>",
-                        Style::default().fg(Color::DarkGray).add_modifier(Modifier::ITALIC),
+                        Style::default()
+                            .fg(Color::DarkGray)
+                            .add_modifier(Modifier::ITALIC),
                     )));
                     for line in content.lines() {
                         text.push_line(Line::from(vec![
@@ -314,13 +342,24 @@ impl TranscriptView {
 
                 text.push_line(Line::from(vec![
                     Span::styled("[T] ", Style::default().fg(Color::Yellow)),
-                    Span::styled(rec.name.as_str(), Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
+                    Span::styled(
+                        rec.name.as_str(),
+                        Style::default()
+                            .fg(Color::Yellow)
+                            .add_modifier(Modifier::BOLD),
+                    ),
                     Span::raw(" "),
                     Span::styled(rec.status.to_string(), Style::default().fg(status_color)),
                 ]));
 
                 if let Some(ref output) = rec.output {
-                    let preview: String = output.lines().next().unwrap_or("").chars().take(120).collect();
+                    let preview: String = output
+                        .lines()
+                        .next()
+                        .unwrap_or("")
+                        .chars()
+                        .take(120)
+                        .collect();
                     text.push_line(Line::from(vec![
                         Span::raw("      "),
                         Span::styled(
@@ -346,7 +385,12 @@ impl TranscriptView {
                     ApprovalScope::Session => "session",
                 };
                 text.push_line(Line::from(vec![
-                    Span::styled("[?] ", Style::default().fg(Color::Magenta).add_modifier(Modifier::BOLD)),
+                    Span::styled(
+                        "[?] ",
+                        Style::default()
+                            .fg(Color::Magenta)
+                            .add_modifier(Modifier::BOLD),
+                    ),
                     Span::styled(
                         format!("approval required: {capability} (scope: {scope_label})"),
                         Style::default().fg(Color::Magenta),
@@ -359,9 +403,7 @@ impl TranscriptView {
                     TurnStatus::Failed => ("─── failed ───", Color::Red),
                     TurnStatus::Cancelled => ("─── cancelled ───", Color::DarkGray),
                 };
-                text.push_line(Line::from(
-                    Span::styled(label, Style::default().fg(color)),
-                ));
+                text.push_line(Line::from(Span::styled(label, Style::default().fg(color))));
             }
         }
     }

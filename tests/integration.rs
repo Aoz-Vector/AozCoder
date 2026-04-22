@@ -4,15 +4,14 @@
 //! response body.  The test verifies that `SseClient::connect_stream` correctly
 //! deserialises `RuntimeEnvelope` values from the byte stream.
 
+use aozcoder::client::{
+    SseClient,
+    envelope::{RuntimeEvent, TurnStatus},
+};
 use futures::StreamExt;
 use wiremock::{
     Mock, MockServer, ResponseTemplate,
     matchers::{header, method, path},
-};
-
-use aozcoder::client::{
-    SseClient,
-    envelope::{RuntimeEvent, TurnStatus},
 };
 
 fn make_sse_body(events: &[&str]) -> String {
@@ -49,10 +48,7 @@ async fn connect_stream_parses_turn_end() {
         }
     });
 
-    let body = make_sse_body(&[
-        &turn_start.to_string(),
-        &turn_end.to_string(),
-    ]);
+    let body = make_sse_body(&[&turn_start.to_string(), &turn_end.to_string()]);
 
     Mock::given(method("POST"))
         .and(path("/v1/run"))
@@ -78,7 +74,10 @@ async fn connect_stream_parses_turn_end() {
     assert_eq!(second.seq, 2);
     assert!(matches!(
         second.event,
-        RuntimeEvent::TurnEnd { status: TurnStatus::Completed, .. }
+        RuntimeEvent::TurnEnd {
+            status: TurnStatus::Completed,
+            ..
+        }
     ));
 
     assert!(stream.next().await.is_none());

@@ -53,10 +53,7 @@ impl StatusBar {
     ///
     /// Layout: `[model]  [tool activity]           [tokens]  [turns]`
     pub fn draw(&self, frame: &mut Frame, area: Rect, conversation: &ConversationState) {
-        let model_label = self
-            .model
-            .as_deref()
-            .unwrap_or("connecting…");
+        let model_label = self.model.as_deref().unwrap_or("connecting…");
 
         let tool_label = self
             .active_tool
@@ -65,10 +62,7 @@ impl StatusBar {
             .unwrap_or_default();
 
         let token_label = if self.input_tokens > 0 || self.output_tokens > 0 {
-            format!(
-                " in:{} out:{} ",
-                self.input_tokens, self.output_tokens
-            )
+            format!(" in:{} out:{} ", self.input_tokens, self.output_tokens)
         } else {
             String::new()
         };

@@ -4,9 +4,8 @@
 //! without a real terminal, enabling assertion on character-level output.
 //! This validates layout logic and widget draw methods in isolation.
 
-use ratatui::{Terminal, backend::TestBackend, layout::Rect};
-
 use aozcoder::ui::{PromptArea, TranscriptView};
+use ratatui::{Terminal, backend::TestBackend, layout::Rect};
 
 fn make_terminal(cols: u16, rows: u16) -> Terminal<TestBackend> {
     Terminal::new(TestBackend::new(cols, rows)).unwrap()
@@ -21,7 +20,16 @@ fn prompt_area_renders_without_panic() {
 
     terminal
         .draw(|f| {
-            area_widget.draw(f, Rect { x: 0, y: 0, width: 80, height: 5 }, true);
+            area_widget.draw(
+                f,
+                Rect {
+                    x: 0,
+                    y: 0,
+                    width: 80,
+                    height: 5,
+                },
+                true,
+            );
         })
         .unwrap();
 
@@ -43,7 +51,15 @@ fn transcript_view_renders_user_input() {
 
     terminal
         .draw(|f| {
-            transcript.draw(f, Rect { x: 0, y: 0, width: 80, height: 20 });
+            transcript.draw(
+                f,
+                Rect {
+                    x: 0,
+                    y: 0,
+                    width: 80,
+                    height: 20,
+                },
+            );
         })
         .unwrap();
 

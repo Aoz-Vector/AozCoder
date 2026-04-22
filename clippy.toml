@@ -1,5 +1,5 @@
 allow-unwrap-in-tests = true
-msrv = "1.85.0"
+msrv = "1.86.0"
 disallowed-methods = [
     { path = "std::panic::catch_unwind", reason = "use anyhow/thiserror for error propagation" },
     { path = "std::process::exit", reason = "propagate errors via anyhow::Result to main" },

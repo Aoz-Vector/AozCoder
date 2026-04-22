@@ -1,0 +1,8 @@
+[book]
+title = "AozCoder"
+authors = ["Aoz Coder"]
+language = "en"
+src = "docs"
+
+[build]
+build-dir = "book"

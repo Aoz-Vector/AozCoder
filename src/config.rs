@@ -72,12 +72,12 @@ fn default_true() -> bool {
 
 impl Config {
     /// Loads configuration from the standard path and environment.
-    pub fn load() -> Result<Self, figment::Error> {
+    pub fn load() -> anyhow::Result<Self> {
         let path = config_path();
-        Figment::new()
+        Ok(Figment::new()
             .merge(Toml::file(path))
             .merge(Env::prefixed("AOZCODER_").split("__"))
-            .extract()
+            .extract()?)
     }
 
     /// Serializes and writes the configuration to disk.

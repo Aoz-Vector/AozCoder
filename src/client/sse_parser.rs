@@ -15,8 +15,7 @@ use futures::{Stream, StreamExt};
 use reqwest::StatusCode;
 use tracing::{debug, error, warn};
 
-use crate::client::connection::build_client;
-use crate::client::envelope::RuntimeEnvelope;
+use crate::client::{connection::build_client, envelope::RuntimeEnvelope};
 
 // ---------------------------------------------------------------------------
 // Public client type
@@ -37,7 +36,11 @@ impl SseClient {
     ///
     /// `api_key`, when present, is transmitted as a `Bearer` token per RFC 6750 §2.1.
     pub fn new(base_url: String, api_key: Option<String>, session_id: String) -> Self {
-        Self { base_url, api_key, session_id }
+        Self {
+            base_url,
+            api_key,
+            session_id,
+        }
     }
 
     /// Opens a POST SSE stream to `{base_url}/{endpoint}` and returns a

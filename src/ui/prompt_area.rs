@@ -23,7 +23,10 @@ pub struct PromptArea {
 
 impl PromptArea {
     pub fn new() -> Self {
-        Self { chars: Vec::new(), cursor: 0 }
+        Self {
+            chars: Vec::new(),
+            cursor: 0,
+        }
     }
 
     /// Inserts `c` at the cursor position and advances the cursor by one.
@@ -78,14 +81,17 @@ impl PromptArea {
         let block = Block::default()
             .borders(Borders::ALL)
             .border_style(border_style)
-            .title(if active { " Input " } else { " Input (streaming…) " });
+            .title(if active {
+                " Input "
+            } else {
+                " Input (streaming…) "
+            });
 
         let inner = block.inner(area);
 
         let content: String = self.chars.iter().collect();
-        let (before, after) = content.split_at(
-            self.chars[..self.cursor].iter().collect::<String>().len(),
-        );
+        let (before, after) =
+            content.split_at(self.chars[..self.cursor].iter().collect::<String>().len());
 
         let mut spans = vec![Span::raw(before.to_string())];
 
@@ -101,10 +107,7 @@ impl PromptArea {
                 let rest: String = self.chars[self.cursor + 1..].iter().collect();
                 spans.push(Span::raw(rest));
             } else {
-                spans.push(Span::styled(
-                    " ",
-                    Style::default().bg(Color::White),
-                ));
+                spans.push(Span::styled(" ", Style::default().bg(Color::White)));
             }
         } else {
             spans.push(Span::raw(after.to_string()));

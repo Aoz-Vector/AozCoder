@@ -27,7 +27,10 @@ pub struct BatchOutput {
 
 impl BatchOutput {
     pub fn new(format: OutputFormat) -> Self {
-        Self { format, buffer: String::new() }
+        Self {
+            format,
+            buffer: String::new(),
+        }
     }
 
     /// Ingests one envelope.  Returns `true` when the turn has ended

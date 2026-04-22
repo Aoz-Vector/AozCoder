@@ -4,8 +4,10 @@
 //! a `RuntimeEnvelope` and updates state accordingly.  No I/O occurs here;
 //! all side-effectful work (rendering, network) remains in the calling layer.
 
-use crate::client::envelope::{RuntimeEnvelope, RuntimeEvent};
-use crate::tui::app::App;
+use crate::{
+    client::envelope::{RuntimeEnvelope, RuntimeEvent},
+    tui::app::App,
+};
 
 /// Applies a received envelope to the application state.
 ///
@@ -46,26 +48,46 @@ pub fn apply(app: &mut App, envelope: RuntimeEnvelope) {
             app.transcript_view.set_phase(phase);
         }
 
-        RuntimeEvent::ToolCallStarted { tool_call_id, tool_name, .. } => {
-            app.transcript_view.start_tool_call(&tool_call_id, &tool_name);
+        RuntimeEvent::ToolCallStarted {
+            tool_call_id,
+            tool_name,
+            ..
+        } => {
+            app.transcript_view
+                .start_tool_call(&tool_call_id, &tool_name);
             app.status_bar.set_tool_active(tool_name);
         }
 
-        RuntimeEvent::ToolCallCompleted { tool_call_id, output, duration_ms, .. } => {
-            app.transcript_view.complete_tool_call(&tool_call_id, &output, false);
+        RuntimeEvent::ToolCallCompleted {
+            tool_call_id,
+            output,
+            duration_ms,
+            ..
+        } => {
+            app.transcript_view
+                .complete_tool_call(&tool_call_id, &output, false);
             app.status_bar.clear_tool();
             if let Some(ms) = duration_ms {
                 tracing::debug!(tool_call_id = %tool_call_id, duration_ms = ms, "tool completed");
             }
         }
 
-        RuntimeEvent::ToolCallFailed { tool_call_id, output, .. } => {
-            app.transcript_view.complete_tool_call(&tool_call_id, &output, true);
+        RuntimeEvent::ToolCallFailed {
+            tool_call_id,
+            output,
+            ..
+        } => {
+            app.transcript_view
+                .complete_tool_call(&tool_call_id, &output, true);
             app.status_bar.clear_tool();
         }
 
-        RuntimeEvent::ToolCallStatusUpdated { tool_call_id, status } => {
-            app.transcript_view.update_tool_status(&tool_call_id, status);
+        RuntimeEvent::ToolCallStatusUpdated {
+            tool_call_id,
+            status,
+        } => {
+            app.transcript_view
+                .update_tool_status(&tool_call_id, status);
         }
 
         RuntimeEvent::ToolCallArgumentsDelta { .. } => {
@@ -73,8 +95,11 @@ pub fn apply(app: &mut App, envelope: RuntimeEnvelope) {
             // the completed arguments appear on ToolCallCompleted.
         }
 
-        RuntimeEvent::ApprovalRequest { capability, scope, .. } => {
-            app.transcript_view.push_approval_request(&capability, scope);
+        RuntimeEvent::ApprovalRequest {
+            capability, scope, ..
+        } => {
+            app.transcript_view
+                .push_approval_request(&capability, scope);
         }
 
         RuntimeEvent::TurnEnd { status, usage, .. } => {
@@ -85,13 +110,18 @@ pub fn apply(app: &mut App, envelope: RuntimeEnvelope) {
             }
         }
 
-        RuntimeEvent::Error { message, recoverable, code } => {
+        RuntimeEvent::Error {
+            message,
+            recoverable,
+            code,
+        } => {
             tracing::error!(code = %code, recoverable = recoverable, "runtime error");
             if !recoverable {
                 app.streaming = false;
                 app.error_message = Some(message);
             } else {
-                app.transcript_view.push_line(format!("[error:{code}] {message}"));
+                app.transcript_view
+                    .push_line(format!("[error:{code}] {message}"));
             }
         }
 
@@ -101,8 +131,7 @@ pub fn apply(app: &mut App, envelope: RuntimeEnvelope) {
                 .push_line(format!("Max turns ({max_turns}) reached — session ended."));
         }
 
-        RuntimeEvent::ApprovalResolved { .. }
-        | RuntimeEvent::ValidationResult { .. } => {
+        RuntimeEvent::ApprovalResolved { .. } | RuntimeEvent::ValidationResult { .. } => {
             tracing::debug!("envelope handled passively");
         }
     }

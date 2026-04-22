@@ -1,0 +1,49 @@
+name: docs
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: docs-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: peaceiris/actions-mdbook@v2
+        with:
+          mdbook-version: latest
+      - run: mdbook build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: book
+          path: book
+
+  deploy:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: peaceiris/actions-mdbook@v2
+        with:
+          mdbook-version: latest
+      - uses: actions/configure-pages@v5
+      - run: mdbook build
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: book
+      - id: deployment
+        uses: actions/deploy-pages@v4

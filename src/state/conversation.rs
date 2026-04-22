@@ -27,7 +27,10 @@ pub struct ConversationState {
 
 impl ConversationState {
     pub fn new(session_id: String) -> Self {
-        Self { session_id, ..Default::default() }
+        Self {
+            session_id,
+            ..Default::default()
+        }
     }
 
     pub fn begin_turn(&mut self, user_input: Option<String>) -> u32 {

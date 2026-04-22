@@ -14,8 +14,7 @@ use ratatui::{
 };
 
 use crate::{
-    client::envelope::RuntimeEnvelope,
-    client::envelope_handler,
+    client::{envelope::RuntimeEnvelope, envelope_handler},
     state::ConversationState,
     ui::{PromptArea, StatusBar, TranscriptView},
 };
@@ -173,7 +172,12 @@ fn render_error_overlay(frame: &mut Frame, area: Rect, message: &str) {
     let x = (area.width.saturating_sub(width)) / 2;
     let y = (area.height.saturating_sub(height)) / 2;
 
-    let popup = Rect { x, y, width, height };
+    let popup = Rect {
+        x,
+        y,
+        width,
+        height,
+    };
 
     frame.render_widget(Clear, popup);
 
@@ -182,9 +186,10 @@ fn render_error_overlay(frame: &mut Frame, area: Rect, message: &str) {
         .border_style(Style::default().fg(Color::Red))
         .title(" Error — Ctrl-L to dismiss ");
 
-    let text = Text::from(vec![
-        Line::from(Span::styled(message, Style::default().fg(Color::Red))),
-    ]);
+    let text = Text::from(vec![Line::from(Span::styled(
+        message,
+        Style::default().fg(Color::Red),
+    ))]);
 
     frame.render_widget(
         Paragraph::new(text).block(block).wrap(Wrap { trim: true }),

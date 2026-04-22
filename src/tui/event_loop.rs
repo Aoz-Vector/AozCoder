@@ -18,9 +18,13 @@ use ratatui::DefaultTerminal;
 use tokio::sync::mpsc;
 use tracing::{error, info};
 
-use crate::client::envelope::RuntimeEnvelope;
-use crate::client::sse_parser::{SseClient, SseError};
-use crate::tui::app::{App, AppEvent};
+use crate::{
+    client::{
+        envelope::RuntimeEnvelope,
+        sse_parser::{SseClient, SseError},
+    },
+    tui::app::{App, AppEvent},
+};
 
 // ---------------------------------------------------------------------------
 // Type aliases
@@ -41,11 +45,7 @@ pub struct EventLoop {
 }
 
 impl EventLoop {
-    pub fn new(
-        terminal: DefaultTerminal,
-        sse_client: SseClient,
-        session_id: String,
-    ) -> Self {
+    pub fn new(terminal: DefaultTerminal, sse_client: SseClient, session_id: String) -> Self {
         let (envelope_tx, envelope_rx) = mpsc::unbounded_channel();
         Self {
             app: App::new(session_id),
@@ -137,10 +137,7 @@ impl EventLoop {
 // Stream forwarding task
 // ---------------------------------------------------------------------------
 
-async fn forward_stream(
-    mut stream: EnvelopeStream,
-    tx: mpsc::UnboundedSender<RuntimeEnvelope>,
-) {
+async fn forward_stream(mut stream: EnvelopeStream, tx: mpsc::UnboundedSender<RuntimeEnvelope>) {
     while let Some(result) = stream.next().await {
         match result {
             Ok(envelope) => {

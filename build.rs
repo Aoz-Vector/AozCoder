@@ -1,5 +1,6 @@
-use sha2::{Digest, Sha256};
 use std::{env, fs, path::Path};
+
+use sha2::{Digest, Sha256};
 
 fn main() {
     println!("cargo:rerun-if-changed=schemas/runtime_envelope_v1.json");

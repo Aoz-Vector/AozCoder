@@ -1,19 +1,19 @@
 use anyhow::Result;
+use aozcoder::{
+    cli::{Cli, Commands},
+    client::SseClient,
+    config::Config,
+    print::{BatchOutput, OutputFormat},
+    tui::EventLoop,
+};
 use clap::Parser;
 use crossterm::{
     execute,
     terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
 };
 use futures::StreamExt;
-use ratatui::backend::CrosstermBackend;
-use ratatui::Terminal;
+use ratatui::{Terminal, backend::CrosstermBackend};
 use tracing_subscriber::{EnvFilter, layer::SubscriberExt, util::SubscriberInitExt};
-
-use aozcoder::cli::{Cli, Commands};
-use aozcoder::client::SseClient;
-use aozcoder::config::Config;
-use aozcoder::print::{BatchOutput, OutputFormat};
-use aozcoder::tui::EventLoop;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -22,8 +22,7 @@ async fn main() -> Result<()> {
     let filter = if cli.verbose {
         EnvFilter::new("aozcoder=debug,info")
     } else {
-        EnvFilter::from_default_env()
-            .add_directive("aozcoder=info".parse()?)
+        EnvFilter::from_default_env().add_directive("aozcoder=info".parse()?)
     };
 
     tracing_subscriber::registry()

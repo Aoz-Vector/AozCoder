@@ -8,9 +8,13 @@ in an interactive ratatui interface.
 
 - Rust nightly (see `rust-toolchain.toml`)
 - A reachable Vexcoder server
+- `cargo-nextest` for the full local gate
+- `mdbook` for documentation builds
 
 ```
 rustup toolchain install nightly
+cargo install cargo-nextest --locked
+cargo install mdbook --locked
 rustup show  # confirms the toolchain file takes effect
 ```
 
@@ -23,6 +27,15 @@ cargo build --release
 ```
 
 The compiled binary is at `target/release/aozcoder`.
+
+## Validation
+
+```sh
+make gate-fast
+```
+
+The gate runs formatting, clippy, `cargo nextest run`, `cargo test --all-targets`,
+and `mdbook build`.
 
 ## Usage
 
@@ -97,3 +110,13 @@ cargo nextest run
 # Integration tests only (requires network access to spawn a mock server)
 cargo test --test integration
 ```
+
+## Raw Repository Links
+
+```sh
+make raw-links
+make raw-links RAW_LINKS_ARGS='--branch main'
+```
+
+The utility enumerates tracked files with `git ls-files` and prints one
+`raw.githubusercontent.com` URL per file.
