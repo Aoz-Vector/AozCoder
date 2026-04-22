@@ -18,6 +18,7 @@ use std::collections::HashMap;
 use ratatui::{
     Frame,
     layout::Rect,
+    prelude::StatefulWidget,
     style::{Color, Modifier, Style},
     text::{Line, Span, Text},
     widgets::{Block, Borders, Paragraph, Scrollbar, ScrollbarOrientation, ScrollbarState, Wrap},
@@ -127,7 +128,7 @@ impl TranscriptView {
             }
             StreamBlock::ToolResult { tool_call_id, output, is_error } => {
                 if let Some(&tc_idx) = self.tool_call_index.get(&tool_call_id) {
-                    if let Some(TranscriptEntry::ToolCall(ref mut rec)) =
+                    if let Some(TranscriptEntry::ToolCall(rec)) =
                         self.entries.get_mut(tc_idx)
                     {
                         rec.output = Some(output);
@@ -184,7 +185,7 @@ impl TranscriptView {
         let Some(&idx) = self.tool_call_index.get(tool_call_id) else {
             return;
         };
-        if let Some(TranscriptEntry::ToolCall(ref mut rec)) = self.entries.get_mut(idx) {
+        if let Some(TranscriptEntry::ToolCall(rec)) = self.entries.get_mut(idx) {
             rec.status = if is_error { ToolStatus::Error } else { ToolStatus::Complete };
             rec.output = Some(output.to_string());
             rec.is_error = is_error;
@@ -195,7 +196,7 @@ impl TranscriptView {
         let Some(&idx) = self.tool_call_index.get(tool_call_id) else {
             return;
         };
-        if let Some(TranscriptEntry::ToolCall(ref mut rec)) = self.entries.get_mut(idx) {
+        if let Some(TranscriptEntry::ToolCall(rec)) = self.entries.get_mut(idx) {
             rec.status = status;
         }
     }

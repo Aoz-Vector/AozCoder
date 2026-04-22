@@ -2,7 +2,7 @@
 name = "aozcoder"
 version = "0.1.0-nightly+20260422"
 edition = "2024"
-rust-version = "1.85.0"
+rust-version = "1.86.0"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/Aoz-Vector/AozCoder"
 description = "Terminal UI client for the Vexcoder normalized inference API"
