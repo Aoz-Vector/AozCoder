@@ -6,8 +6,10 @@ endif
 .SHELLFLAGS := -euo pipefail -c
 
 BRANCH ?= $(shell branch=$$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo main); if [ "$$branch" = "HEAD" ]; then echo main; else echo $$branch; fi)
+SITEMAP_BRANCH ?= main
+SITEMAP_PATH ?= docs/RAW-URL-SITEMAP.md
 
-.PHONY: help _require-nextest _require-mdbook build check fmt fmt-check lint test test-nextest docs docs-check raw-links gate gate-fast clean
+.PHONY: help _require-nextest _require-mdbook build check fmt fmt-check lint test test-nextest docs docs-check raw-url-sitemap check-raw-url-sitemap gate gate-fast clean
 
 help:
 	@printf '%s\n' \
@@ -20,8 +22,9 @@ help:
 	  "  test        cargo test --all-targets" \
 	  "  test-nextest cargo nextest run --all-features" \
 	  "  docs        mdbook build" \
-	  "  raw-links   cargo run --bin raw-links -- --branch $(BRANCH)" \
-	  "  gate        fmt-check + lint + nextest + all-target tests + docs" \
+	  "  raw-url-sitemap generate $(SITEMAP_PATH) from git ls-files" \
+	  "  check-raw-url-sitemap verify $(SITEMAP_PATH) matches git ls-files" \
+	  "  gate        fmt-check + lint + nextest + all-target tests + raw sitemap + docs" \
 	  "  gate-fast   identical to gate" \
 	  "  clean       cargo clean"
 
@@ -63,10 +66,14 @@ test-nextest: _require-nextest
 docs: _require-mdbook
 	mdbook build
 
-docs-check: docs
+docs-check: _require-mdbook check-raw-url-sitemap
+	mdbook build
 
-raw-links:
-	cargo run --quiet --bin raw-links -- --branch "$(BRANCH)" $(RAW_LINKS_ARGS)
+raw-url-sitemap:
+	cargo run --quiet --bin raw-links -- --branch "$(SITEMAP_BRANCH)" --format markdown --output "$(SITEMAP_PATH)"
+
+check-raw-url-sitemap:
+	cargo run --quiet --bin raw-links -- --branch "$(SITEMAP_BRANCH)" --format markdown --output "$(SITEMAP_PATH)" --check
 
 gate: fmt-check lint test-nextest test docs-check
 

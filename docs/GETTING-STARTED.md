@@ -2,86 +2,66 @@
 
 AozCoder is a terminal UI client that connects to a running Vexcoder server
 instance via Server-Sent Events and renders the canonical `RuntimeEnvelope` stream
-in an interactive ratatui interface.
+# Build From Source
 
-## Prerequisites
-
-- Rust nightly (see `rust-toolchain.toml`)
+AozCoder is a terminal UI client that connects to a running Vexcoder server instance via Server-Sent Events and renders the canonical `RuntimeEnvelope` stream in an interactive ratatui interface.
 - A reachable Vexcoder server
-- `cargo-nextest` for the full local gate
+## Requirements
 - `mdbook` for documentation builds
 
-```
+- Git
 rustup toolchain install nightly
 cargo install cargo-nextest --locked
+- A reachable Vexcoder server
 cargo install mdbook --locked
-rustup show  # confirms the toolchain file takes effect
+```bash
 ```
 
 ## Build from Source
-
 ```sh
 git clone https://github.com/Aoz-Vector/AozCoder
 cd AozCoder
 cargo build --release
-```
+```bash
 
 The compiled binary is at `target/release/aozcoder`.
 
+make gate-fast
 ## Validation
 
 ```sh
 make gate-fast
+## First run
+
+```bash
+./target/release/aozcoder --help
+./target/release/aozcoder
 ```
 
-The gate runs formatting, clippy, `cargo nextest run`, `cargo test --all-targets`,
-and `mdbook build`.
-
-## Usage
-
+Use `--api-url` and `--api-key` when the endpoint is not a local default.
 ### Interactive TUI
-
+## Validation
 ```sh
-# Connect to a local server (default: http://localhost:8080)
-aozcoder
-
-# Connect to a remote server with an API key
-aozcoder --api-url https://vexcoder.example.com --api-key $TOKEN
+```bash
+make gate-fast
 ```
 
+The gate runs formatting, clippy, `cargo nextest run`, `cargo test --all-targets`, raw URL sitemap verification, and `mdbook build`.
+
+## Runtime
+aozcoder
+```bash
+aozcoder --api-url https://vexcoder.example.com --api-key $TOKEN
 **Key bindings:**
 
-| Key | Action |
-|-----|--------|
-| `Enter` | Submit prompt |
-| `Ctrl-C` | Interrupt streaming turn |
-| `Ctrl-Q` | Quit |
-| `Esc` | Clear prompt / dismiss error |
-| `↑ / ↓` | Scroll transcript |
-| `End` | Resume auto-scroll |
-
-### Batch Mode
-
-```sh
-# Print response as text (default)
-aozcoder run "Explain the Liskov substitution principle"
-
-# JSON-encoded string output
-aozcoder run --format json "What is RFC 9113?"
-
 # Pipe into a pager
-aozcoder run "List Rust 2024 edition changes" | less
 ```
-
-### Session Inspection
 
 ```sh
 aozcoder session
-```
+## Documentation
 
-## Configuration
-
-AozCoder reads `$XDG_CONFIG_HOME/aozcoder/config.toml` (falling back to
+The mdBook source is in `docs/`. The generated raw-content index is in `docs/RAW-URL-SITEMAP.md`.
 `~/.config/aozcoder/config.toml`).  All keys are optional.
 
 ```toml
@@ -100,23 +80,3 @@ compact_mode = false
 
 Environment variables override file values.  Nested keys use `__` as a
 separator: `AOZCODER_UI__COMPACT_MODE=true`.
-
-## Running Tests
-
-```sh
-# All tests via cargo-nextest
-cargo nextest run
-
-# Integration tests only (requires network access to spawn a mock server)
-cargo test --test integration
-```
-
-## Raw Repository Links
-
-```sh
-make raw-links
-make raw-links RAW_LINKS_ARGS='--branch main'
-```
-
-The utility enumerates tracked files with `git ls-files` and prints one
-`raw.githubusercontent.com` URL per file.

@@ -1,10 +1,18 @@
 use std::{
     error::Error,
+    fs,
     io::{self, Write},
+    path::PathBuf,
     process::Command,
 };
 
-use clap::Parser;
+use clap::{Parser, ValueEnum};
+
+#[derive(Copy, Clone, Debug, Eq, PartialEq, ValueEnum)]
+enum OutputFormat {
+    Tsv,
+    Markdown,
+}
 
 #[derive(Parser, Debug)]
 #[command(name = "raw-links")]
@@ -23,12 +31,27 @@ struct Cli {
 
     #[arg(long, default_value = "https://raw.githubusercontent.com")]
     base_url: String,
+
+    #[arg(long, value_enum, default_value_t = OutputFormat::Tsv)]
+    format: OutputFormat,
+
+    #[arg(long)]
+    output: Option<PathBuf>,
+
+    #[arg(long, default_value_t = false)]
+    check: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct RepoSpec {
     owner: String,
     repo: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct LinkEntry {
+    path: String,
+    url: String,
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -43,15 +66,42 @@ fn main() -> Result<(), Box<dyn Error>> {
     };
 
     let branch = cli.branch.unwrap_or_else(default_branch);
-    let files = git_stdout(["ls-files"])?;
-    let mut stdout = io::BufWriter::new(io::stdout().lock());
+    let entries = collect_entries(&cli.base_url, &repo, &branch)?;
+    let rendered = match cli.format {
+        OutputFormat::Tsv => render_tsv(&entries),
+        OutputFormat::Markdown => render_markdown(&entries, &repo, &branch, &cli.base_url),
+    };
 
-    for path in files.lines().filter(|line| !line.is_empty()) {
-        let url = build_raw_url(&cli.base_url, &repo, &branch, path);
-        writeln!(stdout, "{path}\t{url}")?;
+    match (cli.output.as_ref(), cli.check) {
+        (Some(path), true) => check_output(path, &rendered)?,
+        (Some(path), false) => write_output(path, &rendered)?,
+        (None, true) => {
+            return Err(io::Error::other("--check requires --output").into());
+        }
+        (None, false) => {
+            let mut stdout = io::BufWriter::new(io::stdout().lock());
+            stdout.write_all(rendered.as_bytes())?;
+        }
     }
 
     Ok(())
+}
+
+fn collect_entries(
+    base_url: &str,
+    repo: &RepoSpec,
+    branch: &str,
+) -> Result<Vec<LinkEntry>, io::Error> {
+    let files = git_stdout(["ls-files"])?;
+
+    Ok(files
+        .lines()
+        .filter(|line| !line.is_empty())
+        .map(|path| LinkEntry {
+            path: path.to_string(),
+            url: build_raw_url(base_url, repo, branch, path),
+        })
+        .collect())
 }
 
 fn build_raw_url(base_url: &str, repo: &RepoSpec, branch: &str, path: &str) -> String {
@@ -63,6 +113,63 @@ fn build_raw_url(base_url: &str, repo: &RepoSpec, branch: &str, path: &str) -> S
         encode_segment(branch),
         encode_path(path)
     )
+}
+
+fn render_tsv(entries: &[LinkEntry]) -> String {
+    let mut rendered = String::new();
+    for entry in entries {
+        rendered.push_str(&entry.path);
+        rendered.push('\t');
+        rendered.push_str(&entry.url);
+        rendered.push('\n');
+    }
+    rendered
+}
+
+fn render_markdown(entries: &[LinkEntry], repo: &RepoSpec, branch: &str, base_url: &str) -> String {
+    let mut rendered = String::new();
+    rendered.push_str("# Raw URL Sitemap\n\n");
+    rendered.push_str("This file is generated from `git ls-files`.\n\n");
+    rendered.push_str("Repository: `");
+    rendered.push_str(&repo.owner);
+    rendered.push('/');
+    rendered.push_str(&repo.repo);
+    rendered.push_str("`\n\n");
+    rendered.push_str("Branch: `");
+    rendered.push_str(branch);
+    rendered.push_str("`\n\n");
+    rendered.push_str("Base URL: `");
+    rendered.push_str(&build_raw_url(base_url, repo, branch, ""));
+    rendered.push_str("`\n\n");
+
+    for entry in entries {
+        rendered.push_str("- [");
+        rendered.push_str(&entry.path);
+        rendered.push_str("](");
+        rendered.push_str(&entry.url);
+        rendered.push_str(")\n");
+    }
+
+    rendered
+}
+
+fn write_output(path: &PathBuf, rendered: &str) -> Result<(), io::Error> {
+    if let Some(parent) = path.parent() {
+        fs::create_dir_all(parent)?;
+    }
+    fs::write(path, rendered)
+}
+
+fn check_output(path: &PathBuf, rendered: &str) -> Result<(), io::Error> {
+    let existing = fs::read_to_string(path)?;
+    if existing == rendered {
+        Ok(())
+    } else {
+        Err(io::Error::other(format!(
+            "{} is stale; regenerate the raw URL sitemap",
+            path.display()
+        )))
+    }
 }
 
 fn default_branch() -> String {
@@ -189,5 +296,26 @@ mod tests {
             "https://raw.githubusercontent.com/Aoz-Vector/AozCoder/work%2Ftopic/src/main.rs"
                 .to_string()
         );
+    }
+
+    #[test]
+    fn render_markdown_includes_heading_and_links() {
+        let repo = RepoSpec {
+            owner: "Aoz-Vector".to_string(),
+            repo: "AozCoder".to_string(),
+        };
+        let entries = vec![LinkEntry {
+            path: "src/main.rs".to_string(),
+            url: "https://raw.githubusercontent.com/Aoz-Vector/AozCoder/main/src/main.rs"
+                .to_string(),
+        }];
+
+        let rendered =
+            render_markdown(&entries, &repo, "main", "https://raw.githubusercontent.com");
+
+        assert!(rendered.starts_with("# Raw URL Sitemap\n"));
+        assert!(rendered.contains(
+            "- [src/main.rs](https://raw.githubusercontent.com/Aoz-Vector/AozCoder/main/src/main.rs)"
+        ));
     }
 }

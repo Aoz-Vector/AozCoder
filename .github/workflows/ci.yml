@@ -14,41 +14,23 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  fmt:
+  gate-fast:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+
       - uses: dtolnay/rust-toolchain@nightly
         with:
-          components: rustfmt
-      - uses: Swatinem/rust-cache@v2
-      - run: make fmt-check
+          components: rustfmt, clippy
 
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
-      - uses: dtolnay/rust-toolchain@nightly
-        with:
-          components: clippy
       - uses: Swatinem/rust-cache@v2
-      - run: make lint
 
-  nextest:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
-      - uses: dtolnay/rust-toolchain@nightly
-      - uses: Swatinem/rust-cache@v2
       - uses: taiki-e/install-action@v2
         with:
           tool: cargo-nextest
-      - run: make test-nextest
 
-  test-all-targets:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
-      - uses: dtolnay/rust-toolchain@nightly
-      - uses: Swatinem/rust-cache@v2
-      - run: make test
+      - uses: peaceiris/actions-mdbook@v2
+        with:
+          mdbook-version: latest
+
+      - run: make gate-fast

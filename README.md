@@ -1,46 +1,46 @@
 # AozCoder
 
-AozCoder is a standalone ratatui-native CLI consumer for the Vexcoder normalized API. It reads Server-Sent Events, reconstructs canonical `RuntimeEnvelope` values, and renders both interactive and batch surfaces from the same stream.
+AozCoder is a standalone ratatui-native CLI consumer for the Vexcoder normalized API.
 
-## Repository Layout
+## Build from source
 
-- `src/client/` contains the HTTP transport, SSE parsing, and envelope handling code.
-- `src/tui/` contains the event loop and terminal application state.
-- `src/ui/` contains the renderers for transcript, prompt, and status surfaces.
-- `src/print/` contains the non-interactive output path.
-- `schemas/` contains the runtime envelope schema snapshot.
-- `docs/` contains the mdBook source.
+Requires Git, a nightly Rust toolchain with `cargo` on `PATH`, `cargo-nextest`, `mdbook`, write access in the checkout, and a reachable Vexcoder endpoint.
 
-## Local Build
-
-```sh
+```bash
+git clone https://github.com/Aoz-Vector/AozCoder.git
+cd AozCoder
 cargo build --release
-```
-
-## Local Validation
-
-```sh
 make gate-fast
+./target/release/aozcoder --help
 ```
 
-## Raw GitHub Content Links
+The built binary is at `target/release/aozcoder`.
 
-```sh
-make raw-links
-make raw-links RAW_LINKS_ARGS='--branch main'
-```
-
-Each line contains the tracked repository path and the corresponding `https://raw.githubusercontent.com/<owner>/<repo>/<branch>/<path>` URL.
+Local and private-network endpoints can stay on plain HTTP. Public remote endpoints should use `https://` and an API token.
 
 ## Documentation
 
-```sh
-mdbook build
+Full documentation is in `docs/`.
+
+- [Build From Source](docs/GETTING-STARTED.md)
+- [Raw URL Sitemap](docs/RAW-URL-SITEMAP.md)
+
+To read the book locally:
+
+```bash
 mdbook serve --open
 ```
 
-The rendered book is written to `book/`.
+## Generated files
 
-## License
+`docs/RAW-URL-SITEMAP.md` is generated from `git ls-files` and verified by `make gate-fast` on every push through the `ci` workflow.
+
+## Repository layout
+
+- `src/client/` contains the HTTP transport, SSE parsing, and envelope handling code.
+- `src/tui/` contains the terminal event loop and application state.
+- `src/ui/` contains the renderers for transcript, prompt, and status surfaces.
+- `src/print/` contains the non-interactive output path.
+- `schemas/` contains the runtime envelope schema snapshot.
 
 MIT. See `LICENSE`.

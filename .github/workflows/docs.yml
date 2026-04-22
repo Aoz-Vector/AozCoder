@@ -41,6 +41,8 @@ jobs:
         with:
           mdbook-version: latest
       - uses: actions/configure-pages@v5
+        with:
+          enablement: true
       - run: mdbook build
       - uses: actions/upload-pages-artifact@v3
         with:
